@@ -15,7 +15,9 @@ namespace API.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
         {
             // Add the JWT token service and other repositories
+            services.Configure<CloudinarySettings>(config.GetSection("CloudinarySettings")); // point the program from where to take the configuration
             services.AddScoped<ITokenService, TokenService>();
+            services.AddScoped<IPhotoService, PhotoService>(); // service to communicate with cloudinary
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
 
