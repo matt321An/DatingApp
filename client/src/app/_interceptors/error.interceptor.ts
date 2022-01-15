@@ -32,8 +32,10 @@ export class ErrorInterceptor implements HttpInterceptor {
                   }
                 }
                 throw modalStateErrors.flat();
-              } else{ // This is a normal bad-request error, show error via toastr notification
+              } else if(typeof(error.error) === 'object'){ // This is a normal bad-request error, show error via toastr notification
                 this.toastr.error("Bad request", error.status);
+              } else { // This is a 400 Bad request with a specific message
+                this.toastr.error(error.error, error.status);
               }
               break;
 
