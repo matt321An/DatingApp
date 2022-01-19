@@ -19,6 +19,7 @@ namespace API.Extensions
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IPhotoService, PhotoService>(); // service to communicate with cloudinary
             services.AddScoped<ILikesRepository, LikesRepository>(); // service for the 'like' feature
+            services.AddScoped<IMessageRepository, MessageRepository>(); // service for the 'message' feature
             services.AddScoped<LogUserActivity>(); // service to update lastActive property of logged user
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddAutoMapper(typeof(AutoMapperProfiles).Assembly);
