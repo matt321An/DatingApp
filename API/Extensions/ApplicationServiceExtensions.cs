@@ -6,6 +6,7 @@ using API.Data;
 using API.Helpers;
 using API.Interfaces;
 using API.Services;
+using API.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace API.Extensions
@@ -15,6 +16,7 @@ namespace API.Extensions
         public static IServiceCollection AddApplicationServices(this IServiceCollection services, IConfiguration config)
         {
             // Add the JWT token service and other repositories
+            services.AddSingleton<PresenceTracker>(); // dictionary containing all the online users
             services.Configure<CloudinarySettings>(config.GetSection("CloudinarySettings")); // point the program from where to take the configuration
             services.AddScoped<ITokenService, TokenService>();
             services.AddScoped<IPhotoService, PhotoService>(); // service to communicate with cloudinary
