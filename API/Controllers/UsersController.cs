@@ -47,7 +47,8 @@ namespace API.Controllers
         [HttpGet("{username}", Name = "GetUser")] // we can use this route name in the AddPhoto() function
         public async Task<ActionResult<MemberDto>> GetUser(string username)
         {
-            return await _unitOfWork.UserRepository.GetMemberAsync(username);
+            var currentUsername = User.GetUsername();
+            return await _unitOfWork.UserRepository.GetMemberAsync(username, currentUsername);
         }
 
         // api/users + 'memberDto' -> edits the user
@@ -88,10 +89,10 @@ namespace API.Controllers
             };
 
             // If this is the only photo of the user, set it to main
-            if(user.Photos.Count == 0)
+            /*if(user.Photos.Count == 0)
             {
                 photo.IsMain = true;
-            }
+            }*/
 
             // Save the Photo obj to our DB
             user.Photos.Add(photo);
@@ -114,15 +115,18 @@ namespace API.Controllers
 
             if(photo.IsMain) return BadRequest("This is already your main photo");
 
+            if(!photo.IsApproved) return BadRequest("This photo is not approved");
+
             // Make the current main photo not main anymore
             var currentMain = user.Photos.FirstOrDefault(x => x.IsMain);
             if(currentMain != null) currentMain.IsMain = false;
+           
             // Make the selected photo main
             photo.IsMain = true;
 
             if(await _unitOfWork.Complete()) return NoContent();
 
-            return BadRequest("Failes to set main photo");
+            return BadRequest("Failed to set main photo");
         }
 
         // api/users/delete-photo/ + 'photoId' -> delete the photo with the given id
