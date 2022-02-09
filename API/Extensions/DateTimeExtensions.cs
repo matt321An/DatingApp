@@ -9,7 +9,7 @@ namespace API.Extensions
     {
         public static int CalculateAge(this DateTime dob)
         {
-            var today = DateTime.Today;
+            var today = DateTime.UtcNow;
             var age = today.Year - dob.Year;
             
             // If the member didn't had his birthday 
