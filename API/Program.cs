@@ -1,45 +1,59 @@
-using API.Data;
-using API.Entities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
+var builder = WebApplication.CreateBuilder(args);
 
-namespace API
+// add services to the container
+
+builder.Services.AddApplicationServices(builder.Configuration);
+builder.Services.AddControllers();
+builder.Services.AddCors();
+builder.Services.AddIdentityServices(builder.Configuration);
+builder.Services.AddSignalR();
+
+// Configure the HTTP request pipeline
+
+var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
+
+app.UseHttpsRedirection();
+
+app.UseCors(x => x.AllowAnyHeader()
+    .AllowAnyMethod()
+    .AllowCredentials() // used for the query string type authentication see line 38 in Identity service
+    .WithOrigins("https://localhost:4200"));
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
+app.MapControllers();
+app.MapHub<PresenceHub>("hubs/presence");
+app.MapHub<MessageHub>("hubs/message");
+app.MapFallbackToController("Index", "Fallback");
+
+
+using var scope = app.Services.CreateScope();
+var services = scope.ServiceProvider;
+
+// Seed the database 
+try
 {
-    public class Program
-    {
-        public static async Task Main(string[] args)
-        {
-             var host = CreateHostBuilder(args).Build();
-             using var scope = host.Services.CreateScope();
-             var services = scope.ServiceProvider;
-            
-            // Seed the database 
-             try
-             {
-                var context = services.GetRequiredService<DataContext>();
-                var userManager = services.GetRequiredService<UserManager<AppUser>>();
-                var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
+    var context = services.GetRequiredService<DataContext>();
+    var userManager = services.GetRequiredService<UserManager<AppUser>>();
+    var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
 
-                // Apply any migrations and create the DB if it doesn't exist
-                await context.Database.MigrateAsync();
-                
-                await Seed.SeedUsers(userManager, roleManager);
-             }
-             catch (Exception ex)
-             {
-                var logger = services.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "An error occured during migration");
-             }
+    // Apply any migrations and create the DB if it doesn't exist
+    await context.Database.MigrateAsync();
 
-            // Run the application
-             await host.RunAsync();
-        }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureWebHostDefaults(webBuilder =>
-                {
-                    webBuilder.UseStartup<Startup>();
-                });
-    }
+    await Seed.SeedUsers(userManager, roleManager);
 }
+catch (Exception ex)
+{
+    var logger = services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "An error occured during migration");
+}
+
+// Start the application
+await app.RunAsync();
+
